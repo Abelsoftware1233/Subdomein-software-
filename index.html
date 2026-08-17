@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subdomain Scanner</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">▲</span>
+      <div>
+        <h1>Subdomain Scanner</h1>
+        <p class="subtitle">Recon-tool voor je eigen domeinen — crt.sh · DNS · HTTP</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <section class="panel controls">
+      <div class="field">
+        <label for="domain">Domein</label>
+        <input id="domain" type="text" placeholder="voorbeeld.nl" autocomplete="off" spellcheck="false">
+      </div>
+
+      <div class="options">
+        <label class="toggle">
+          <input type="checkbox" id="bruteforce" checked>
+          <span>DNS brute-force (ingebouwde wordlist)</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="ports">
+          <span>Poortcheck (80, 443, 8080, 8443, 3000, 8000)</span>
+        </label>
+      </div>
+
+      <div class="field custom-wordlist" id="wordlistField" hidden>
+        <label for="wordlist">Eigen wordlist (komma-gescheiden, optioneel)</label>
+        <textarea id="wordlist" rows="2" placeholder="dev, staging, api, vpn, ..."></textarea>
+      </div>
+
+      <div class="actions">
+        <button id="scanBtn" class="btn-primary">
+          <span class="btn-label">Start scan</span>
+        </button>
+        <button id="stopBtn" class="btn-secondary" hidden>Stop</button>
+        <button id="exportBtn" class="btn-secondary" hidden>Exporteer CSV</button>
+      </div>
+
+      <p id="statusLine" class="status-line"></p>
+
+      <div class="progress-wrap" id="progressWrap" hidden>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText"></span>
+      </div>
+    </section>
+
+    <section class="panel results">
+      <div class="results-header">
+        <h2>Resultaten</h2>
+        <span class="count-badge" id="countBadge">0</span>
+      </div>
+
+      <div class="table-wrap">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th>Subdomein</th>
+              <th>IP-adres(sen)</th>
+              <th>HTTP</th>
+              <th>Titel / Server</th>
+              <th>Open poorten</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+            <tr class="empty-row"><td colspan="5">Nog geen resultaten. Voer een domein in en start de scan.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footnote">
+    Alleen bedoeld voor domeinen die je zelf beheert of waarvoor je toestemming hebt.
+  </footer>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
