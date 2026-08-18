@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 #
-# deploy.sh — Installeert de Subdomain Scanner als systemd-service
+# deploy.sh — Installeert de Subdomain Scanner als systemd-service.
+#
+# Dit script regelt ALLEEN de Python-app + systemd-service (poort 5065,
+# rechtstreeks bereikbaar). Reverse proxy / nginx / TLS-terminatie /
+# domeinkoppeling wordt hier bewust niet door geraakt — dat richt je zelf in.
 #
 # Gebruik:
 #   sudo ./deploy.sh install    Installeert/update de service (idempotent)
 #   sudo ./deploy.sh start      Start de service
 #   sudo ./deploy.sh stop       Stopt de service
 #   sudo ./deploy.sh restart    Herstart de service
-#   sudo ./deploy.sh status     Toont de status
+#   sudo ./deploy.sh status     Toont de status + health check
 #   sudo ./deploy.sh logs       Volgt de live logs (journalctl -f)
 #   sudo ./deploy.sh uninstall  Verwijdert de service (laat bestanden staan)
 #
@@ -16,7 +20,9 @@ set -euo pipefail
 # ---------- Configuratie ----------
 APP_NAME="subscanner"
 SERVICE_NAME="subscanner.service"
-APP_PORT="5065"
+# Poort waarop de app luistert. Moet overeenkomen met de poort in app.py (5065).
+# Alleen aanpassen als je ook app.py wijzigt.
+APP_PORT="${APP_PORT:-5065}"
 
 # Installatiemap: standaard /opt/subscanner, override met INSTALL_DIR=... ./deploy.sh install
 INSTALL_DIR="${INSTALL_DIR:-/opt/${APP_NAME}}"
@@ -58,6 +64,30 @@ check_deps() {
 cmd_install() {
     require_root
     check_deps
+
+    # Guard tegen een destructieve rsync --delete op een verkeerde/bestaande map.
+    if [[ "${INSTALL_DIR}" == "/" || "${INSTALL_DIR}" == "" ]]; then
+        err "INSTALL_DIR staat op een onveilige waarde ('${INSTALL_DIR}'). Stop."
+        exit 1
+    fi
+    if [[ -d "${INSTALL_DIR}" ]] && [[ ! -f "${INSTALL_DIR}/app.py" ]] && find "${INSTALL_DIR}" -mindepth 1 -maxdepth 1 -print -quit | grep -q .; then
+        err "${INSTALL_DIR} bestaat al, bevat bestanden, maar lijkt geen eerdere"
+        err "install van deze tool te zijn (geen app.py gevonden). Stop uit voorzorg."
+        err "Kies een andere map met: sudo INSTALL_DIR=/pad ./deploy.sh install"
+        exit 1
+    fi
+    if [[ -f "${INSTALL_DIR}/app.py" ]]; then
+        log "Bestaande installatie gevonden in ${INSTALL_DIR} — wordt bijgewerkt."
+    fi
+
+    # Waarschuw als de poort al bezet is door iets anders dan onze eigen service.
+    if command -v ss &>/dev/null && ss -ltn "( sport = :${APP_PORT} )" 2>/dev/null | grep -q ":${APP_PORT}"; then
+        if ! systemctl is-active --quiet "${SERVICE_NAME}" 2>/dev/null; then
+            warn "Poort ${APP_PORT} lijkt al in gebruik door een ander proces."
+            warn "Start dadelijk kan mislukken totdat dat proces stopt of je APP_PORT aanpast."
+        fi
+    fi
+
     log "Installeren van ${APP_NAME} naar ${INSTALL_DIR}..."
 
     # 1. Systeemgebruiker aanmaken (indien nodig), zonder login-shell/home
@@ -193,6 +223,10 @@ Commando's:
 Omgevingsvariabelen:
   INSTALL_DIR    Installatiemap (default: /opt/${APP_NAME})
   SERVICE_USER   Gebruiker waaronder de service draait (default: ${APP_NAME})
+  APP_PORT       Poort (default: 5065 — moet overeenkomen met app.py)
+
+Let op: dit script regelt alleen de Python-app + systemd-service.
+Nginx/reverse-proxy/TLS/domeinkoppeling richt je zelf in.
 
 Voorbeeld:
   sudo ./deploy.sh install
