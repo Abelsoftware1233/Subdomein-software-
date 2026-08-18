@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS // Subdomain Scanner</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark-wrap">
+        <span class="brand-mark">◈</span>
+        <span class="pulse-ring"></span>
+      </div>
+      <div>
+        <h1>NEXUS <span class="brand-accent">SCAN</span></h1>
+        <p class="subtitle">Recon-engine voor je eigen domeinen — CT-logs · DNS · HTTP · Takeover</p>
+      </div>
+    </div>
+    <div class="status-orb" id="globalStatus">
+      <span class="orb-dot"></span>
+      <span id="globalStatusText">Standby</span>
+    </div>
+  </header>
+
+  <div class="globe-stage">
+    <canvas id="globeCanvas"></canvas>
+    <div class="globe-overlay">
+      <div class="globe-stat">
+        <span class="stat-num" id="statLive">0</span>
+        <span class="stat-label">Actieve hosts</span>
+      </div>
+      <div class="globe-stat">
+        <span class="stat-num" id="statChecked">0</span>
+        <span class="stat-label">Gecontroleerd</span>
+      </div>
+      <div class="globe-stat">
+        <span class="stat-num warn" id="statTakeover">0</span>
+        <span class="stat-label">Takeover-risico</span>
+      </div>
+      <div class="globe-stat">
+        <span class="stat-num" id="statWildcard">—</span>
+        <span class="stat-label">Wildcard DNS</span>
+      </div>
+    </div>
+  </div>
+
+  <main class="layout">
+
+    <section class="panel controls">
+      <div class="panel-title">Configuratie</div>
+
+      <div class="field">
+        <label for="domain">Doeldomein</label>
+        <input id="domain" type="text" placeholder="voorbeeld.nl" autocomplete="off" spellcheck="false">
+      </div>
+
+      <div class="options">
+        <label class="toggle">
+          <input type="checkbox" id="bruteforce" checked>
+          <span>DNS brute-force</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="ports">
+          <span>Poortcheck (80/443/8080/8443/3000/8000)</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="takeover" checked>
+          <span>Subdomain takeover-detectie</span>
+        </label>
+      </div>
+
+      <div class="field custom-wordlist" id="wordlistField">
+        <label for="wordlist">Extra wordlist (komma-gescheiden, wordt toegevoegd aan standaardlijst)</label>
+        <textarea id="wordlist" rows="2" placeholder="intranet2, oldportal, vpn-eu, ..."></textarea>
+      </div>
+
+      <div class="actions">
+        <button id="scanBtn" class="btn-primary">
+          <span class="btn-label">Start scan</span>
+        </button>
+        <button id="stopBtn" class="btn-secondary" hidden>Stop</button>
+        <button id="exportBtn" class="btn-secondary" hidden>Exporteer CSV</button>
+      </div>
+
+      <p id="statusLine" class="status-line"></p>
+
+      <div class="progress-wrap" id="progressWrap" hidden>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText"></span>
+      </div>
+    </section>
+
+    <section class="panel results">
+      <div class="results-header">
+        <h2>Resultaten</h2>
+        <span class="count-badge" id="countBadge">0</span>
+      </div>
+
+      <div class="table-wrap">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th>Subdomein</th>
+              <th>IP-adres(sen)</th>
+              <th>HTTP</th>
+              <th>Titel / Server</th>
+              <th>Poorten</th>
+              <th>Takeover</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+            <tr class="empty-row"><td colspan="6">Nog geen resultaten. Voer een domein in en start de scan.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footnote">
+    Alleen bedoeld voor domeinen die je zelf beheert of waarvoor je toestemming hebt.
+  </footer>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
